@@ -24,7 +24,7 @@ void default_ex_handler(Process &proc, exception_ptr ex, void *arg)
 struct process_start_info {
 	Process *proc_;
 	Program *p_;
-	const string &args_;
+	const string args_; // by value since it might be asynchronous
 	Channel *io_;
 
 	process_start_info(Process *proc, Program *p, const string &args, Channel *io)

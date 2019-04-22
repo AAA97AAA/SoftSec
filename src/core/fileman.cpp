@@ -10,7 +10,7 @@
 using namespace std;
 
 FileManager::FileManager(const string &root_dir) :
-	root_dir_(root_dir),
+	root_dir_(ScopedPath("/", root_dir, root_dir)),
 	root_perms_(root_dir_.permissions())
 {
 }
@@ -25,15 +25,25 @@ FileManager::FileManager(const string &root_dir) :
 // 	return stripped;
 // }
 
+const Dir<ScopedPath> & FileManager::root_dir() const
+{
+	return root_dir_;
+}
+
 ScopedPath * FileManager::resolve(const Process &proc, const std::string &path)
 {
 	if (path.size() == 0) {
-		return new ScopedPath(".", proc.env_.get_wd(), root_dir_);
+		return resolve(proc.env_.get_wd(), ".");
 	} else if (path[0] == '/') {
-		return new ScopedPath(path, root_dir_, root_dir_);
+		return resolve(root_dir_, path);
 	} else {
-		return new ScopedPath(path, proc.env_.get_wd(), root_dir_);
+		return resolve(proc.env_.get_wd(), path);
 	}
+}
+
+ScopedPath * FileManager::resolve(const Dir<ScopedPath> &prefix, const std::string &path)
+{
+	return new ScopedPath(path, prefix, root_dir_);
 }
 
 void FileManager::make_dir(const Process &proc, const std::string &path)

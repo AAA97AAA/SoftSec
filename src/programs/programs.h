@@ -17,3 +17,4 @@ int MakeDir(const std::string &args, Process &proc, Channel *io);
 int Remove(const std::string &args, Process &proc, Channel *io);
 int GetFile(const std::string &args, Process &proc, Channel *io);
 int PutFile(const std::string &args, Process &proc, Channel *io);
+int Grep(const std::string &args, Process &proc, Channel *io);

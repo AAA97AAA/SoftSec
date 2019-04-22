@@ -32,9 +32,8 @@ int main()
 
 	ListeningSocket sock((sockaddr *)&addr, -1);
 
-	RuntimeSystem sys("/home/cysto/cs412/project/project-code/build/root");
-	DirPath workdir("/home/cysto/cs412/project/project-code/build/root");
-	RuntimeEnvironment env(workdir);
+	RuntimeSystem sys("root");
+	RuntimeEnvironment env(sys.root_dir());
 	try {
 		while (true) {
 			cout << "Waiting for client" << endl;

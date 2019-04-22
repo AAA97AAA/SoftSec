@@ -26,7 +26,7 @@ static int GetFileDaemon(const string &args, Process &proc, Channel *io)
 	string filename = get_args(dargs);
 
 	ScopedPath *scoped = proc.sys_.resolve(proc, filename);
-	filename = *scoped;
+	filename = static_cast<const string &>(*scoped);
 	ScopedPath local(*scoped); // so as not to worry about leaks
 	delete scoped;
 
@@ -59,7 +59,7 @@ int GetFile(const string &args, Process &proc, Channel *io)
 	ScopedPath *scoped = proc.sys_.resolve(proc, filename);
 	size_t size;
 	try {
-		FilePath file(*scoped);
+		FilePath file(static_cast<const string &>(*scoped));
 		delete scoped;
 		size = file.size();
 	} catch (...) {

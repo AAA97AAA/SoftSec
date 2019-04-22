@@ -27,7 +27,7 @@ static int PutFileDaemon(const string &args, Process &proc, Channel *io)
 	string filename = get_args(dargs);
 
 	ScopedPath *scoped = proc.sys_.resolve(proc, filename);
-	filename = *scoped;
+	filename = static_cast<const string &>(*scoped);
 	ScopedPath local(*scoped); // so as not to worry about leaks
 	delete scoped;
 
@@ -64,12 +64,13 @@ int PutFile(const string &args, Process &proc, Channel *io)
 	ScopedPath *scoped = proc.sys_.resolve(proc, filename); // sanitization step
 	delete scoped;
 
-	ostringstream dargs;
-	dargs << port << " " << filesize << " " << filename;
+	ostringstream ssdargs;
+	ssdargs << port << " " << filesize << " " << filename << flush;
+	string dargs = ssdargs.str();
 
 	pid_t pid = proc.sys_.create_daemon(&proc, proc.env_);
 	Process *child = proc.sys_.get_process(pid);
-	child->run(PutFileDaemon, dargs.str(), nullptr);
+	child->run(PutFileDaemon, dargs, nullptr);
 
 	out << "put port: " << port << endl;
 

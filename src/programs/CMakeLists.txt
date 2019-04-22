@@ -7,7 +7,8 @@ set(programs_SOURCES
 	who.cpp
 	mkrm.cpp
 	get.cpp
-	put.cpp)
+	put.cpp
+	grep.cpp)
 
 add_library(programs STATIC ${programs_SOURCES} ${programs_HEADERS})
 target_include_directories(programs

@@ -46,7 +46,7 @@ OutboundNetworkChannel::OutboundNetworkChannel(const sockaddr *remote, int conne
 }
 
 ReadFileChannel::ReadFileChannel(const ScopedPath &path, std::fstream::openmode mode)
-:	fin_(path, mode)
+:	fin_(static_cast<const std::string &>(path), mode)
 {
 }
 
@@ -56,7 +56,7 @@ std::istream & ReadFileChannel::in()
 }
 
 WriteFileChannel::WriteFileChannel(const ScopedPath &path, std::fstream::openmode mode)
-:	fout_(path, mode)
+:	fout_(static_cast<const std::string &>(path), mode)
 {
 }
 

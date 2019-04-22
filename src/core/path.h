@@ -11,7 +11,7 @@ public:
 	RealPath(const std::string &path);
 	virtual ~RealPath() {};
 
-	virtual operator const std::string&() const;
+	explicit operator const std::string&() const;
 	__mode_t permissions() const;
 	__off_t size() const;
 
@@ -35,7 +35,7 @@ public:
 	CanonicalPath(const std::string &path, const DirPath &prefix);
 	virtual ~CanonicalPath() {};
 
-	virtual operator const std::string&() const;
+	explicit operator const std::string&() const;
 
 protected:
 	virtual void canonicalize();
@@ -47,6 +47,7 @@ protected:
 class AbsolutePath : public RealPath, public CanonicalPath {
 public:
 	AbsolutePath(const std::string &path, const DirPath &prefix);
+	virtual ~AbsolutePath() {};
 
 	using CanonicalPath::operator const std::string&;
 
@@ -57,6 +58,9 @@ protected:
 class ScopedPath : public CanonicalPath {
 public:
 	ScopedPath(const std::string &path, const DirPath &prefix, const DirPath &scope);
+	virtual ~ScopedPath() {};
+
+	std::string stripped() const;
 
 protected:
 	virtual void canonicalize();
@@ -65,5 +69,19 @@ private:
 	bool is_scoped(const std::string &path) const;
 
 protected:
-	const CanonicalPath scope_;
+	CanonicalPath scope_;
+};
+
+template <class T>
+class Dir : public T, public DirPath {
+public:
+	Dir(const T& path);
+	using CanonicalPath::operator const std::string&;
+};
+
+template <class T>
+class File : public T, public FilePath {
+public:
+	File(const T& path);
+	using CanonicalPath::operator const std::string&;
 };

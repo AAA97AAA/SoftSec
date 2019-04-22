@@ -4,7 +4,7 @@
 
 using std::string;
 
-RuntimeEnvironment::RuntimeEnvironment(const DirPath &wd)
+RuntimeEnvironment::RuntimeEnvironment(const Dir<ScopedPath> &wd)
 :	wd_(wd)
 {
 }
@@ -15,12 +15,12 @@ RuntimeEnvironment::RuntimeEnvironment(const RuntimeEnvironment &env)
 {
 }
 
-const DirPath & RuntimeEnvironment::get_wd() const
+const Dir<ScopedPath> & RuntimeEnvironment::get_wd() const
 {
 	return wd_;
 }
 
-void RuntimeEnvironment::set_wd(const DirPath &wd)
+void RuntimeEnvironment::set_wd(const Dir<ScopedPath> &wd)
 {
 	wd_ = wd;
 }

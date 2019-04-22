@@ -6,18 +6,16 @@
 
 class RuntimeEnvironment {
 public:
-	RuntimeEnvironment(const DirPath &wd);
+	RuntimeEnvironment(const Dir<ScopedPath> &wd);
 	RuntimeEnvironment(const RuntimeEnvironment &env);
 
-	const DirPath & get_wd() const;
-	void set_wd(const DirPath &wd);
+	const Dir<ScopedPath> & get_wd() const;
+	void set_wd(const Dir<ScopedPath> &wd);
 
 	bool defined(const std::string &name) const;
 	std::string & operator[](const std::string &name);
 
-	// TODO add variables to get program name, etc...
-
 private:
-	DirPath wd_;
+	Dir<ScopedPath> wd_;
 	std::unordered_map<std::string, std::string> vars_;
 };

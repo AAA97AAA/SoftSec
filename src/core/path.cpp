@@ -86,7 +86,7 @@ void AbsolutePath::canonicalize()
 
 ScopedPath::ScopedPath(const std::string &path, const DirPath &prefix, const DirPath &scope) :
 	CanonicalPath(path, prefix),
-	scope_(scope, DirPath(static_cast<const string&>(scope)[0] == '/' ? "/" : "."))
+	scope_(static_cast<const std::string &>(scope), DirPath(static_cast<const string&>(scope)[0] == '/' ? "/" : "."))
 {
 	canonicalize();
 }
@@ -111,9 +111,15 @@ void ScopedPath::canonicalize()
 	canonical_path_ = new_path;
 }
 
+std::string ScopedPath::stripped() const
+{
+	const string &strscope = static_cast<const std::string &>(scope_);
+	return static_cast<const string &>(*this).substr(strscope.size());
+}
+
 bool ScopedPath::is_scoped(const std::string &path) const
 {
-	const string &scope = scope_;
+	const string &scope = static_cast<const std::string &>(scope_);
 	if (path == scope) {
 		return true;
 	} else {
@@ -121,3 +127,21 @@ bool ScopedPath::is_scoped(const std::string &path) const
 		return pos == 0;
 	}
 }
+
+template <class T>
+Dir<T>::Dir(const T& path) :
+	T(path),
+	DirPath(static_cast<const string&>(*this))
+{
+}
+
+template <class T>
+File<T>::File(const T& path) :
+	T(path),
+	FilePath(static_cast<const string&>(*this))
+{
+}
+
+// Compiling the template for specific classes
+template class Dir<ScopedPath>;
+template class File<ScopedPath>;

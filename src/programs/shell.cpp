@@ -19,6 +19,7 @@ static unordered_map<string, Program *> programs
 	{"rm", Remove},
 	{"get", GetFile},
 	{"put", PutFile},
+	{"grep", Grep},
 };
 
 static void ShellExceptionHandler(Process &proc, exception_ptr ex, void *arg)
@@ -103,7 +104,7 @@ static int PrivilegedShell(const string &args, Process &proc, Channel *io)
 	ostream &out = io->out();
 
 	out << "Welcome, " << proc.env_["USER"] << "!" << endl;
-	out << static_cast<const string &>(proc.env_.get_wd()) << "> " << flush;
+	out << proc.env_.get_wd().stripped() << "> " << flush;
 
 	string cmd;
 	while (in >> cmd) {
@@ -116,7 +117,7 @@ static int PrivilegedShell(const string &args, Process &proc, Channel *io)
 			ScopedPath *nwd = nullptr;
 			try {
 				nwd = proc.sys_.resolve(proc, cmd_args);
-				proc.env_.set_wd(static_cast<const string &>(*nwd));
+				proc.env_.set_wd(*nwd);
 			} catch (const std::exception &e) {
 				ShellExceptionHandler(proc, current_exception(), io);
 			}
@@ -131,7 +132,7 @@ static int PrivilegedShell(const string &args, Process &proc, Channel *io)
 				out << "Unrecognized command \"" << cmd << "\"" << endl;
 			}
 		}
-		out << static_cast<const string &>(proc.env_.get_wd()) << "> " << flush;
+		out << proc.env_.get_wd().stripped() << "> " << flush;
 	}
 
 	return 0;
