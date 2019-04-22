@@ -3,15 +3,21 @@
 #include "runsys.h"
 #include <exception>
 #include <pthread.h>
+#include <iostream>
 
 using namespace std;
 
 void default_ex_handler(Process &proc, exception_ptr ex, void *arg)
 {
-	if (proc.parent_ == nullptr || proc.parent_->ex_handler == nullptr) {
+	if (proc.parent_ == nullptr || proc.sys_.get_pid(proc.parent_) == 0 || // make sure parent is still alive
+			proc.parent_->ex_handler == nullptr) {
+		try {
+			rethrow_exception(ex);
+		} catch (const std::exception& e) {
+			cout << "Orphaned exception: " << e.what() << endl;
+		}
 		return;
 	}
-
 	proc.parent_->ex_handler(*proc.parent_, ex, proc.parent_->ex_args);
 }
 

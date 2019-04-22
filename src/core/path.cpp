@@ -26,6 +26,11 @@ __mode_t RealPath::permissions() const
 	return (sb_.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO));
 }
 
+__off_t RealPath::size() const
+{
+	return sb_.st_size;
+}
+
 FilePath::FilePath(const std::string &path) :
 	RealPath(path)
 {

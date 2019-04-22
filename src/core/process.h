@@ -14,7 +14,7 @@ class Barrier;
 
 typedef void (*ex_handler_fn)(Process &proc, std::exception_ptr ex, void *arg);
 
-void default_ex_handler(std::exception_ptr ex, Process &proc, void *arg);
+void default_ex_handler(Process &proc, std::exception_ptr ex, void *arg);
 
 struct Process {
 	pid_t pid_;

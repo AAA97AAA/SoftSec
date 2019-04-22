@@ -4,6 +4,7 @@
 #include "runsys.h"
 #include <stdexcept>
 #include <mutex>
+#include <algorithm>
 
 // TODO remove dis
 #include <iostream>
@@ -100,6 +101,18 @@ Process * ProcessManager::get_process(pid_t pid)
 
 	auto it = process_helper(pid);
 	return it->second;
+}
+
+pid_t ProcessManager::get_pid(Process *proc)
+{
+	auto it = find_if(std::begin(procs_), std::end(procs_),
+                           [proc](std::pair<const int, Process*> &p)
+                           {return p.second == proc;});
+	if (it == std::end(procs_)) {
+		return 0;
+	} else {
+		return it->first;
+	}
 }
 
 void ProcessManager::kill_process(pid_t pid)

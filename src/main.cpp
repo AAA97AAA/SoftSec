@@ -20,6 +20,7 @@ using namespace std;
 
 int main()
 {
+	srand(time(nullptr));
 	signal(SIGPIPE, SIG_IGN); // THIS IS SUPER FUCKING IMPORTANT DONT REMOVE!!!!
 
 	struct sockaddr_in addr;

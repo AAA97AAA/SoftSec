@@ -13,6 +13,7 @@ public:
 
 	virtual operator const std::string&() const;
 	__mode_t permissions() const;
+	__off_t size() const;
 
 protected:
 	std::string real_path_;

@@ -17,6 +17,8 @@ static unordered_map<string, Program *> programs
 	{"w", Who},
 	{"mkdir", MakeDir},
 	{"rm", Remove},
+	{"get", GetFile},
+	{"put", PutFile},
 };
 
 static void ShellExceptionHandler(Process &proc, exception_ptr ex, void *arg)
@@ -35,7 +37,7 @@ static void ShellExceptionHandler(Process &proc, exception_ptr ex, void *arg)
 
 static int PrivilegedShell(const string &args, Process &proc, Channel *io);
 
-static string get_args(istream &in)
+string get_args(istream &in)
 {
 	string args;
 	string line;

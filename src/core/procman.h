@@ -21,6 +21,7 @@ public:
 	pid_t create_daemon(Process *parent, const RuntimeEnvironment &env);
 
 	Process *get_process(pid_t pid);
+	pid_t get_pid(Process *proc);
 	void kill_process(pid_t pid);
 
 	std::unordered_map<pid_t, Process *>::const_iterator proc_cbegin() const;

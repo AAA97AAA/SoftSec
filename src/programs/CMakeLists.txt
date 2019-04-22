@@ -5,7 +5,9 @@ set(programs_SOURCES
 	shell.cpp
 	ping.cpp
 	who.cpp
-	mkrm.cpp)
+	mkrm.cpp
+	get.cpp
+	put.cpp)
 
 add_library(programs STATIC ${programs_SOURCES} ${programs_HEADERS})
 target_include_directories(programs
