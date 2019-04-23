@@ -114,7 +114,11 @@ void ScopedPath::canonicalize()
 std::string ScopedPath::stripped() const
 {
 	const string &strscope = static_cast<const std::string &>(scope_);
-	return static_cast<const string &>(*this).substr(strscope.size());
+	string s = static_cast<const string &>(*this).substr(strscope.size());
+	if (s.size() == 0) {
+		s = "/";
+	}
+	return s;
 }
 
 bool ScopedPath::is_scoped(const std::string &path) const

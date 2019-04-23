@@ -59,7 +59,7 @@ int GetFile(const string &args, Process &proc, Channel *io)
 	ScopedPath *scoped = proc.sys_.resolve(proc, filename);
 	size_t size;
 	try {
-		FilePath file(static_cast<const string &>(*scoped));
+		File<ScopedPath> file(*scoped);
 		delete scoped;
 		size = file.size();
 	} catch (...) {
