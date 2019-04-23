@@ -15,8 +15,8 @@ std::ostream & Channel::out()
 	throw std::runtime_error("Output stream unavailable.");
 }
 
-NetworkChannel::NetworkChannel(const Socket& socket)
-:	socket_(socket),
+NetworkChannel::NetworkChannel(const Socket& socket) :
+	socket_(socket),
 	sin_buf_(socket_),
 	sout_buf_(socket_),
 	sin_(&sin_buf_),
@@ -34,14 +34,14 @@ std::ostream & NetworkChannel::out()
 	return sout_;
 }
 
-InboundNetworkChannel::InboundNetworkChannel(ListeningSocket *listen_socket, int transfer_timeout)
-:	NetworkChannel(in_socket_),
+InboundNetworkChannel::InboundNetworkChannel(ListeningSocket *listen_socket, int transfer_timeout) :
+	NetworkChannel(in_socket_),
 	in_socket_(listen_socket, transfer_timeout)
 {
 }
 
-OutboundNetworkChannel::OutboundNetworkChannel(const sockaddr *remote, int connect_timeout, int transfer_timeout)
-:	NetworkChannel(out_socket_),
+OutboundNetworkChannel::OutboundNetworkChannel(const sockaddr *remote, int connect_timeout, int transfer_timeout) :
+	NetworkChannel(out_socket_),
 	out_socket_(remote, connect_timeout, transfer_timeout)
 {
 }
@@ -73,4 +73,19 @@ WriteFileChannel::~WriteFileChannel()
 std::ostream & WriteFileChannel::out()
 {
 	return fout_;
+}
+
+ExternalChannel::ExternalChannel(std::istream &sin, std::ostream &sout) :
+	sin_(sin), sout_(sout)
+{
+}
+
+std::istream & ExternalChannel::in()
+{
+	return sin_;
+}
+
+std::ostream & ExternalChannel::out()
+{
+	return sout_;
 }

@@ -75,3 +75,14 @@ private:
 	std::string filename_;
 	std::ofstream fout_;
 };
+
+class ExternalChannel : public Channel {
+public:
+	ExternalChannel(std::istream &sin, std::ostream &sout);
+	virtual std::istream &in();
+	virtual std::ostream &out();
+
+private:
+	std::istream &sin_;
+	std::ostream &sout_;
+};
