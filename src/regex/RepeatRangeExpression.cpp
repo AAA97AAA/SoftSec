@@ -5,6 +5,13 @@ RepeatRangeExpression::RepeatRangeExpression(const RegularExpression * const reg
 {
 }
 
+RepeatRangeExpression::RepeatRangeExpression(const RepeatRangeExpression &re) :
+	RegularExpression(re),
+	regex(re.regex->clone()),
+	min(re.min), max(re.max)
+{
+}
+
 RepeatRangeExpression::~RepeatRangeExpression()
 {
 	if (regex != nullptr) {
@@ -58,4 +65,9 @@ int RepeatRangeExpression::match(const char * str, unsigned int len) const
 	} while (backtrack);
 
 	return mlen + mlen_next;
+}
+
+RegularExpression * RepeatRangeExpression::clone() const
+{
+	return new RepeatRangeExpression(*this);
 }

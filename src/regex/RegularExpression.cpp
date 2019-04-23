@@ -1,22 +1,35 @@
 #include "RegularExpression.h"
 #include <assert.h>
 
-RegularExpression::~RegularExpression()
+RegularExpression::RegularExpression() :
+	next_(nullptr)
 {
-	if (this->next != nullptr) {
-		delete this->next;
+}
+
+RegularExpression::RegularExpression(const RegularExpression &re) :
+	RegularExpression()
+{
+	if (re.next_ != nullptr) {
+		add(re.next_->clone());
 	}
 }
 
-RegularExpression * const RegularExpression::add(RegularExpression * const regex)
+RegularExpression::~RegularExpression()
+{
+	if (this->next_ != nullptr) {
+		delete this->next_;
+	}
+}
+
+RegularExpression * RegularExpression::add(RegularExpression * const regex)
 {
 	// Ideally, `regex` should not cause a loop in the linked list,
-	//   unless this is done explicitly.
+	//   unless this is done explicitly by the programmer
 
-	if (next == nullptr) {
-		next = regex;
+	if (next_ == nullptr) {
+		next_ = regex;
 	} else {
-		next->add(regex);
+		next_->add(regex);
 	}
 	return regex;
 }
@@ -24,8 +37,9 @@ RegularExpression * const RegularExpression::add(RegularExpression * const regex
 int RegularExpression::match_next(unsigned int mlen, const char * str, unsigned int len) const
 {
 	assert(len >= mlen);
-	if (next != nullptr) {
-		return next->match(&str[mlen], len - mlen);
+	const RegularExpression *n = next_;
+	if (n != nullptr) {
+		return n->match(&str[mlen], len - mlen);
 	} else {
 		return 0; // end of pattern
 	}

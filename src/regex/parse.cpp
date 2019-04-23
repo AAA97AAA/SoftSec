@@ -17,10 +17,10 @@ enum State {
     STATE_EXIT
 };
 
-static RegularExpression * try_parse_range(char ** str, size_t *len, RegularExpression * regex)
+static RegularExpression * try_parse_range(const char ** str, size_t *len, RegularExpression * regex)
 {
     // only change str if parsing succeeds, otherwise parse as literals
-    char *stmp = *str;
+    const char *stmp = *str;
 	size_t ltmp = *len;
     assert(*stmp == '{');
     stmp++; ltmp--; // consume opening bracket
@@ -108,11 +108,11 @@ error:
     return next;
 }
 
-RegularExpression * parse(char ** str, size_t *len, int depth, int * err)
+RegularExpression * parse(const char ** str, size_t *len, int depth, int * err)
 {
     RegularExpression *head = nullptr, *next = nullptr;
     bool closed = false;
-	char *stmp = *str;
+	const char *stmp = *str;
 	size_t ltmp = *len;
 	while (ltmp > 0) {
 		switch (*stmp) {

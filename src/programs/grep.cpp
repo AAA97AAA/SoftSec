@@ -2,6 +2,7 @@
 #include "io/channel.h"
 #include "core/process.h"
 #include "core/runsys.h"
+#include "regex/re.h"
 #include <dirent.h>
 #include <string>
 #include <vector>
@@ -53,21 +54,24 @@ int Grep(const string &args, Process &proc, Channel *io)
 		throw std::runtime_error("Regex pattern not specified.");
 	}
 
+	const char *tmp = pattern.c_str();
+	size_t len = pattern.size();
+	int err = 0;
+	RegularExpression *regexp = parse(&tmp, &len, 0, &err);
+	if (err != 0) {
+		throw std::runtime_error("Cannot parse regex pattern.");
+	}
+	SearchExpression se(regexp);
+
 	vector<ScopedPath *> files;
 	walk(".", files, proc);
 
 	for (auto it = files.cbegin(); it != files.cend(); ++it) {
 		ScopedPath *spath = *it;
-		out << static_cast<const string&>(*spath) << endl;
+		ScopedPath current(*spath);
+		delete spath;
 
-		Channel *fileio;
-		try {
-			fileio = proc.resman_.create_readfile_channel(*spath);
-			delete spath;
-		} catch (...) {
-			delete spath;
-			throw;
-		}
+		Channel *fileio = proc.resman_.create_readfile_channel(current);
 		istream &file = fileio->in();
 		ostringstream sscontents;
 		copy(istreambuf_iterator<char>(file),
@@ -75,7 +79,10 @@ int Grep(const string &args, Process &proc, Channel *io)
 			ostreambuf_iterator<char>(sscontents));
 
 		string contents = sscontents.str();
-		out << contents <<endl;
+		auto result = se.search(contents.c_str(), contents.size());
+		if (std::get<1>(result) >= 0) {
+			out << current.stripped() << endl;
+		}
 	}
 
 	return 0;

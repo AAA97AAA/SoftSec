@@ -5,6 +5,13 @@ AlternationExpression::AlternationExpression(const RegularExpression * const fir
 {
 }
 
+AlternationExpression::AlternationExpression(const AlternationExpression &re) :
+	RegularExpression(re),
+	first(re.first->clone()),
+	rest(re.rest->clone())
+{
+}
+
 AlternationExpression::~AlternationExpression()
 {
 	if (first != nullptr) {
@@ -30,4 +37,9 @@ int AlternationExpression::match_first(const char * str, unsigned int len) const
 			return mlen;
 		}
 	}
+}
+
+RegularExpression * AlternationExpression::clone() const
+{
+	return new AlternationExpression(*this);
 }

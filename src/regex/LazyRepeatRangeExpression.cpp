@@ -5,6 +5,11 @@ LazyRepeatRangeExpression::LazyRepeatRangeExpression(const RegularExpression * c
 {
 }
 
+LazyRepeatRangeExpression::LazyRepeatRangeExpression(const LazyRepeatRangeExpression &re) :
+	RepeatRangeExpression(re)
+{
+}
+
 int LazyRepeatRangeExpression::match(const char * str, unsigned int len) const
 {
 	unsigned int lbound = min;
@@ -53,4 +58,9 @@ int LazyRepeatRangeExpression::match(const char * str, unsigned int len) const
 	} while (backtrack);
 
 	return mlen + mlen_next;
+}
+
+RegularExpression * LazyRepeatRangeExpression::clone() const
+{
+	return new LazyRepeatRangeExpression(*this);
 }
