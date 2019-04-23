@@ -3,6 +3,7 @@
 #include "socketstream.h"
 #include "core/path.h"
 #include <stdexcept>
+#include <sys/stat.h>
 
 std::istream & Channel::in()
 {
@@ -45,8 +46,9 @@ OutboundNetworkChannel::OutboundNetworkChannel(const sockaddr *remote, int conne
 {
 }
 
-ReadFileChannel::ReadFileChannel(const ScopedPath &path, std::fstream::openmode mode)
-:	fin_(static_cast<const std::string &>(path), mode)
+ReadFileChannel::ReadFileChannel(const ScopedPath &path, std::fstream::openmode mode):
+	filename_(static_cast<const std::string &>(path)),
+	fin_(filename_, mode)
 {
 }
 
@@ -55,9 +57,17 @@ std::istream & ReadFileChannel::in()
 	return fin_;
 }
 
-WriteFileChannel::WriteFileChannel(const ScopedPath &path, std::fstream::openmode mode)
-:	fout_(static_cast<const std::string &>(path), mode)
+WriteFileChannel::WriteFileChannel(const ScopedPath &path, std::fstream::openmode mode) :
+	filename_(static_cast<const std::string &>(path)),
+	fout_(filename_, mode)
 {
+}
+
+WriteFileChannel::~WriteFileChannel()
+{
+	fout_.flush();
+	fout_.close();
+	chmod(filename_.c_str(), 0x1ed);
 }
 
 std::ostream & WriteFileChannel::out()

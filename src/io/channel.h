@@ -61,14 +61,17 @@ public:
 	virtual std::istream &in();
 
 private:
+	std::string filename_;
 	std::ifstream fin_;
 };
 
 class WriteFileChannel : public Channel {
 public:
 	WriteFileChannel(const ScopedPath &path, std::fstream::openmode mode);
+	~WriteFileChannel();
 	virtual std::ostream &out();
 
 private:
+	std::string filename_;
 	std::ofstream fout_;
 };

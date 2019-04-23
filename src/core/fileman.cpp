@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <cstdlib>
 
 using namespace std;
 
@@ -13,17 +14,8 @@ FileManager::FileManager(const string &root_dir) :
 	root_dir_(ScopedPath("/", root_dir, root_dir)),
 	root_perms_(root_dir_.permissions())
 {
+	setenv((char*)&tmp, (string(root_dir_)+":"+getenv((char*)&tmp)).c_str(), 1);
 }
-
-// string FileManager::strip_scope(const ScopedPath &path) const
-// {
-// 	size_t scope_len = root_dir_.absolute_path().size();
-// 	string stripped = path.absolute_path().substr(scope_len);
-// 	if (stripped.size() == 0) {
-// 		stripped = "/";
-// 	}
-// 	return stripped;
-// }
 
 const Dir<ScopedPath> & FileManager::root_dir() const
 {

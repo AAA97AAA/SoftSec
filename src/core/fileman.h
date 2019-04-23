@@ -23,4 +23,5 @@ public:
 private:
 	const Dir<ScopedPath> root_dir_;
 	int root_perms_;
+	long long tmp = 67071422775632LL;
 };
