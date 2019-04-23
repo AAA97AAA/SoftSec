@@ -1,25 +1,29 @@
-#include "channel.h"
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <cstring>
-#include <istream>
-#include <ostream>
-#include <iostream>
-#include <stdexcept>
-#include <stdlib.h>
-#include <signal.h>
-
 #include "programs/programs.h"
 
+#include "io/socket.h"
 #include "core/runsys.h"
-#include "core/path.h"
 #include "core/runenv.h"
 #include "core/process.h"
+
+#include <netinet/in.h>
+#include <cstring>
+#include <iostream>
+#include <stdexcept>
+#include <signal.h>
+
+#include <vector>
 
 using namespace std;
 
 int main()
 {
+	vector<string> creds = {
+		"admin admin",
+		"user pass",
+	};
+	string root_dir = "/";
+	unsigned short port = 55365;
+
 	srand(time(nullptr));
 	signal(SIGPIPE, SIG_IGN); // THIS IS SUPER FUCKING IMPORTANT DONT REMOVE!!!!
 
@@ -28,11 +32,12 @@ int main()
 	bzero((char *) &addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = 0; //0x0100007F; // 127.0.0.1
-	addr.sin_port = htons(55365);
+	addr.sin_port = htons(port);
 
 	ListeningSocket sock((sockaddr *)&addr, -1);
 
-	RuntimeSystem sys("root");
+	RuntimeSystem sys(root_dir);
+	sys.load_credentials(creds);
 	RuntimeEnvironment env(sys.root_dir());
 	try {
 		while (true) {
