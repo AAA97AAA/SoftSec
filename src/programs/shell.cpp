@@ -73,14 +73,15 @@ int LoginShell(const string &args, Process &proc, Channel *io)
 			if (tmp == "pass") {
 				string password = get_args(in);
 
-				// TODO authenticate
-				if (true) {
+				if (proc.sys_.verify_credentials(username, password)) {
 					pid_t pid = proc.sys_.create_application(&proc, proc.env_);
 					Process *child = proc.sys_.get_process(pid);
 					child->env_["USER"] = username;
 					if (child->run(PrivilegedShell, "", io) == -1) {
 						break; // exit when priv. shell exits
 					}
+				} else {
+					out << "Error: invalid login credentials." << endl;
 				}
 			} else {
 				out << "Error: Illegal command during login." << endl;

@@ -15,7 +15,7 @@ int Who(const string &args, Process &proc, Channel *io)
 	ostream &out = io->out();
 
 	unordered_set<std::string> users;
-	proc.sys_.populate_users(users);
+	proc.sys_.get_active_users(users);
 
 	for (auto it = users.cbegin(); it != users.cend(); ++it) {
 		out << *it << endl;
