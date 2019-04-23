@@ -114,17 +114,21 @@ void ScopedPath::canonicalize()
 std::string ScopedPath::stripped() const
 {
 	const string &strscope = static_cast<const std::string &>(scope_);
-	string s = static_cast<const string &>(*this).substr(strscope.size());
-	if (s.size() == 0) {
-		s = "/";
+	if (strscope.size() > 1) {
+		string s = static_cast<const string &>(*this).substr(strscope.size());
+		if (s.size() == 0) {
+			s = "/";
+		}
+		return s;
+	} else {
+		return static_cast<const string &>(*this);
 	}
-	return s;
 }
 
 bool ScopedPath::is_scoped(const std::string &path) const
 {
 	const string &scope = static_cast<const std::string &>(scope_);
-	if (path == scope) {
+	if (path == scope || scope.size() == 1) { // '/' scope is always of size 1
 		return true;
 	} else {
 		size_t pos = path.find(scope + "/"); // the trailing forward-slash is necessary
