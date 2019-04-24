@@ -17,3 +17,6 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-parameter -fno-stack-protector -z
 
 add_executable(server server.cpp)
 target_link_libraries(server programs regex core io ${CMAKE_THREAD_LIBS_INIT})
+
+add_executable(client client.cpp)
+target_link_libraries(client programs regex core io ${CMAKE_THREAD_LIBS_INIT})
