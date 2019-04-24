@@ -5,6 +5,8 @@
 #include "core/runenv.h"
 #include "core/process.h"
 
+#include "configs/loadconfig.h"
+
 #include <netinet/in.h>
 #include <cstring>
 #include <iostream>
@@ -24,12 +26,17 @@ void signal_handler(int s)
 
 int main()
 {
-	vector<string> creds = {
-		"admin admin",
-		"user pass",
-	};
-	string root_dir = "root";
-	unsigned short port = 55365;
+	ConfigManager conf("grass.conf");
+	conf.loadConfigFile();
+	vector<string> port_params = conf.getParams("port");
+	unsigned short port = stoi(port_params[0]);
+	vector<string> user_params = conf.getParams("user");
+	vector<string> basedir_params = conf.getParams("base");
+	vector<string> creds;
+	for (auto i=0UL;i<user_params.size();i++) {
+		creds.push_back(user_params[i]);
+	}
+	string root_dir = basedir_params[0];
 
 	srand(time(nullptr));
 	signal(SIGPIPE, SIG_IGN); // THIS IS SUPER FUCKING IMPORTANT DONT REMOVE!!!!
