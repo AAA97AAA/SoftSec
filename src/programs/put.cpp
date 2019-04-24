@@ -42,9 +42,17 @@ static int PutFileDaemon(const string &args, Process &proc, Channel *io)
 	istream &in = proc.resman_.create_inbound_channel(&sock, 5000)->in();
 	ostream &out = proc.resman_.create_writefile_channel(local, fstream::binary)->out();
 
-	copy_n(istreambuf_iterator<char>(in), 
-		filesize,
-		ostreambuf_iterator<char>(out));
+	size_t i = 0; 
+	auto oit = ostreambuf_iterator<char>(out);
+	for (
+			auto iit = istreambuf_iterator<char>(in);
+			i < filesize && iit != istreambuf_iterator<char>();
+			++i, ++iit
+		)
+	{
+		oit = *iit;
+	}
+
 	out.flush();
 
 	return 0;
@@ -58,8 +66,12 @@ int PutFile(const string &args, Process &proc, Channel *io)
 
 	istringstream aargs(args);
 	string filename;
-	size_t filesize;
+	ssize_t filesize = 0;
 	aargs >> filename >> filesize;
+
+	if (filesize <= 0) {
+		throw std::runtime_error("Invalid file size");
+	}
 
 	ScopedPath *scoped = proc.sys_.resolve(proc, filename); // sanitization step
 	delete scoped;

@@ -14,7 +14,7 @@ Socket::Socket(int fd, int timeout)
 Socket::~Socket()
 {
 	// disregard any errors that might arise, std::fstream::openmode mode
-	shutdown(fd_, 2);
+	shutdown(fd_, SHUT_RDWR);
 	close(fd_);
 }
 
@@ -80,7 +80,13 @@ ListeningSocket::ListeningSocket(const sockaddr *local_ep, int accept_timeout)
 	accept_timeout_(accept_timeout)
 {
 	fd_ = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-	if (fd_ < 0) {
+	int reuse = 1;
+	if
+	(
+		fd_ < 0 ||
+		setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0 ||
+		setsockopt(fd_, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(reuse)) < 0
+	) {
 		throw std::runtime_error("Failed to create inbound socket");
 	}
 

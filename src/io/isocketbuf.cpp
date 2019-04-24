@@ -38,21 +38,19 @@ std::streambuf::int_type isocketbuf::underflow()
         throw std::runtime_error(strerror(errno));
     } else if (e_count == 0) {
         throw std::runtime_error("Socket poll timeout (POLLIN).");
+    } else if (((s_poll.revents & POLLIN) == 0)) {
+        throw std::runtime_error("Socket read error.");
     }
 
-    bool can_read = ((s_poll.revents & POLLIN) != 0);
-
     ssize_t n = 0;
-    if (can_read) {
-	    n = read(socket_.fd(), start, buffer_.size() - (start - base));
+    n = read(socket_.fd(), start, buffer_.size() - (start - base));
+    if (n < 0) {
+        throw std::runtime_error("Socket read error.");
+    }
 
-	    if (n < 0) {
-            throw std::runtime_error("Socket read error.");
-	    }
-	}
-
-    if (n == 0)
+    if (n == 0) {
         return traits_type::eof();
+    }
 
     // Set buffer pointers
     setg(base, start, start + n);

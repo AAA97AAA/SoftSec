@@ -19,6 +19,15 @@ ProcessManager::ProcessManager(size_t size)
 
 ProcessManager::~ProcessManager()
 {
+	shutdown();
+
+	for (auto it = procs_.begin(); it != procs_.end(); ++it) {
+		delete it->second;
+	}
+}
+
+void ProcessManager::shutdown()
+{
 	working = false;
 	signal_exit(-1); // hacky fix to terminate watch thread
 	void *ret;
@@ -38,18 +47,17 @@ std::unordered_map<pid_t, Process *>::iterator ProcessManager::process_helper(pi
 void ProcessManager::watch()
 {
 	while (working) {
-		pid_t pid = wait_exit_any();	// wait until a process exits
+		pid_t pid = wait_exit_any(); // wait until a process exits
 		if (pid < 0) {
 			continue;
 		}
 
 		Process *proc = get_process(pid);
 		proc->bar_->wait(); // wait until all listeners are notified of exit (e.g: application)
-		proc->bar_->wait(); // wait until all listeners receive the exit code
 		if (proc->ex_) {
 			proc->ex_handler(*proc, proc->ex_, proc->ex_args);
 		}
-		proc->bar_->wait(); // wait until exception is handled
+		proc->bar_->wait(); // wait until exception is handled and listeners receive the exit code
 
 		void *ret;
 		pthread_join(proc->main_thread_, &ret);
@@ -144,7 +152,6 @@ int ProcessManager::wait_exit(pid_t pid)
 	Process *proc = get_process(pid);
 	proc->bar_->wait();
 	int exit_code = proc->ecode_;
-	proc->bar_->wait();
 	proc->bar_->wait();
 	return exit_code;
 }

@@ -16,6 +16,7 @@ class ProcessManager {
 public:
 	ProcessManager(size_t size = 8);
 	virtual ~ProcessManager();
+	void shutdown();
 
 	pid_t create_application(Process *parent, const RuntimeEnvironment &env);
 	pid_t create_daemon(Process *parent, const RuntimeEnvironment &env);

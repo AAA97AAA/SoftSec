@@ -8,6 +8,7 @@ public:
 	explicit Barrier(std::size_t count);
 
 	void wait();
+	void open();
 
 private:
 	std::mutex mx_;

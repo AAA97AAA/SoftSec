@@ -15,17 +15,30 @@
 
 using namespace std;
 
+RuntimeSystem *gsys;
+
+void signal_handler(int s)
+{
+	gsys->shutdown();
+}
+
 int main()
 {
 	vector<string> creds = {
 		"admin admin",
 		"user pass",
 	};
-	string root_dir = "/";
+	string root_dir = "root";
 	unsigned short port = 55365;
 
 	srand(time(nullptr));
 	signal(SIGPIPE, SIG_IGN); // THIS IS SUPER FUCKING IMPORTANT DONT REMOVE!!!!
+
+	struct sigaction sigIntHandler;
+	sigIntHandler.sa_handler = signal_handler;
+	sigemptyset(&sigIntHandler.sa_mask);
+	sigIntHandler.sa_flags = 0;
+	sigaction(SIGINT, &sigIntHandler, NULL);
 
 	struct sockaddr_in addr;
 
@@ -36,7 +49,7 @@ int main()
 
 	ListeningSocket sock((sockaddr *)&addr, -1);
 
-	RuntimeSystem sys(root_dir);
+	RuntimeSystem sys(root_dir); gsys = &sys;
 	sys.load_credentials(creds);
 	RuntimeEnvironment env(sys.root_dir());
 	try {

@@ -22,3 +22,9 @@ void Barrier::wait() {
         cond_.wait(lk, [this, local_round] { return local_round != round_; });
     }
 }
+
+void Barrier::open()
+{
+    ++round_;
+    cond_.notify_all();
+}

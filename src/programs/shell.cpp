@@ -63,6 +63,7 @@ int LoginShell(const string &args, Process &proc, Channel *io)
 	ostream &out = io->out();
 
 	string tmp;
+	out << "Welcome to GraaS" << endl;	
 	out << "> " << flush;
 	while (in >> tmp) {
 		if (tmp == "login") {
