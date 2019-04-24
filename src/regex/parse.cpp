@@ -92,7 +92,6 @@ static RegularExpression * try_parse_range(const char ** str, size_t *len, Regul
 		goto error; // no preceding expression
 	}
     
-finish:
     *str = stmp;
 	*len = ltmp;
     

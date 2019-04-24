@@ -20,6 +20,8 @@ static unordered_map<string, Program *> programs
 	{"get", GetFile},
 	{"put", PutFile},
 	{"grep", Grep},
+	{"date", Date},
+	{"ls", Ls},
 };
 
 static void ShellExceptionHandler(Process &proc, exception_ptr ex, void *arg)
@@ -81,19 +83,26 @@ int LoginShell(const string &args, Process &proc, Channel *io)
 					if (child->run(PrivilegedShell, "", io) == -1) {
 						break; // exit when priv. shell exits
 					}
+
 				} else {
 					out << "Error: invalid login credentials." << endl;
 				}
 			} else {
-				out << "Error: Illegal command during login." << endl;
+				get_args(in);
+				out << "Error: illegal command during login." << endl;
 			}
 		} else if (tmp == "ping") {
 			string child_args = get_args(in);
 			launch_application(&proc, Ping, child_args, io);
+
 		} else if (tmp == "exit") {
 			break;
+		} else {
+			// command not found
+			out << "Unrecognized command \"" << tmp << "\"" << endl;
 		}
 		out << "> " << flush;
+
 	}
 
 	out << "Goodbye!" << endl;
