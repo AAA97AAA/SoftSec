@@ -105,8 +105,10 @@ static int PrivilegedShell(const string &args, Process &proc, Channel *io)
 	istream &in = io->in();
 	ostream &out = io->out();
 
-	out << "Welcome, " << proc.env_["USER"] << "!" << endl;
-	out << proc.env_.get_wd().stripped() << "> " << flush;
+	string user = proc.env_["USER"];
+
+	out << "Welcome, " << user << "!" << endl;
+	out << user << "@grass:" << proc.env_.get_wd().stripped() << "$ " << flush;
 
 	string cmd;
 	while (in >> cmd) {
@@ -134,7 +136,7 @@ static int PrivilegedShell(const string &args, Process &proc, Channel *io)
 				out << "Unrecognized command \"" << cmd << "\"" << endl;
 			}
 		}
-		out << proc.env_.get_wd().stripped() << "> " << flush;
+		out << user << "@grass:" << proc.env_.get_wd().stripped() << "$ " << flush;
 	}
 
 	return 0;
