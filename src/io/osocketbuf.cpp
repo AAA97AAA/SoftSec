@@ -39,7 +39,7 @@ int osocketbuf::sync()
 
 bool osocketbuf::write_and_flush()
 {
-    pollfd s_poll = {.fd = socket_.fd(), .events = POLLOUT};
+    pollfd s_poll = {.fd = socket_.fd(), .events = POLLOUT, .revents = 0};
     int e_count = poll(&s_poll, 1, socket_.timeout());
 
     if (e_count < 0) {
@@ -52,7 +52,6 @@ bool osocketbuf::write_and_flush()
         throw std::runtime_error("Socket poll error (POLLOUT).");
     }
 
-    char *end = pptr();
     std::ptrdiff_t len = pptr() - pbase();
     pbump(-len);
 

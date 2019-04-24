@@ -29,7 +29,7 @@ std::streambuf::int_type isocketbuf::underflow()
     char *start = base;
 
     // start is now the start of the buffer.
-    pollfd s_poll = {.fd = socket_.fd(), .events = POLLIN};
+    pollfd s_poll = {.fd = socket_.fd(), .events = POLLIN, .revents = 0};
     int e_count = poll(&s_poll, 1, socket_.timeout());
 
     if (e_count < 0) {

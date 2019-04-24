@@ -68,7 +68,7 @@ int PutFile(const string &args, Process &proc, Channel *io)
 	aargs >> filename >> filesize;
 
 	if (filesize <= 0) {
-		throw std::runtime_error("Invalid file size");
+		throw std::runtime_error("file transfer failed.");
 	}
 
 	ScopedPath scoped = proc.sys_.resolve(proc, filename); // sanitization step

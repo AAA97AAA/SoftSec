@@ -21,12 +21,12 @@ RealPath::operator const std::string&() const
 	return real_path_;
 }
 
-__mode_t RealPath::permissions() const
+mode_t RealPath::permissions() const
 {
 	return (sb_.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO));
 }
 
-__off_t RealPath::size() const
+off_t RealPath::size() const
 {
 	return sb_.st_size;
 }
@@ -84,11 +84,14 @@ void AbsolutePath::canonicalize()
 	free(resolved);
 }
 
-ScopedPath::ScopedPath(const std::string &path, const DirPath &prefix, const DirPath &scope) :
+ScopedPath::ScopedPath(const std::string &path, const DirPath &prefix, const DirPath &scope, std::size_t max_len) :
 	CanonicalPath(path, prefix),
 	scope_(static_cast<const std::string &>(scope), DirPath(static_cast<const string&>(scope)[0] == '/' ? "/" : "."))
 {
 	canonicalize();
+	if (stripped().size() > max_len) {
+        throw std::runtime_error("the path is too long.");
+	}
 }
 
 void ScopedPath::canonicalize()
@@ -105,7 +108,7 @@ void ScopedPath::canonicalize()
 	}
 
 	if (!is_scoped(new_path)) {
-        throw std::runtime_error("Path is out of scope.");
+        throw std::runtime_error("access denied!");
 	}
 
 	canonical_path_ = new_path;

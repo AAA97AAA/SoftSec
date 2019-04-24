@@ -5,6 +5,7 @@
 #include <poll.h>
 #include <cstring>
 #include <unistd.h>
+#include <cerrno>
 
 Socket::Socket(int fd, int timeout)
 	: fd_(fd), timeout_(timeout)
@@ -32,7 +33,7 @@ InboundSocket::InboundSocket(ListeningSocket *listen_socket, int transfer_timeou
 :	Socket(-1, transfer_timeout)
 {
 	int listen_fd = listen_socket->fd();
-	pollfd s_poll = {.fd = listen_fd, .events = POLLIN};
+	pollfd s_poll = {.fd = listen_fd, .events = POLLIN, .revents = 0};
     int e_count = poll(&s_poll, 1, listen_socket->accept_timeout_);
 
     if (e_count < 0) {
@@ -69,7 +70,7 @@ OutboundSocket::OutboundSocket(const sockaddr *remote_ep, int connect_timeout, i
         throw std::runtime_error(strerror(errno));
 	}
 
-	pollfd s_poll = {.fd = fd_, .events = POLLOUT};
+	pollfd s_poll = {.fd = fd_, .events = POLLOUT, .revents = 0};
 	if (poll(&s_poll, 1, connect_timeout) <= 0 || (s_poll.revents & POLLHUP) != 0) {
 		throw std::runtime_error("Failed to connect outbound socket");
 	}

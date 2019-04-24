@@ -85,7 +85,7 @@ int main(int argc, const char *argv[])
 		throw std::runtime_error("Invalid number of arguments");
 	}
 
-	string root_dir = "root_cli";
+	string root_dir = ".";
 	string remote_ip = argv[1];
 	unsigned short port = atoi(argv[2]);
 

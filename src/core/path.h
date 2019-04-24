@@ -12,8 +12,8 @@ public:
 	virtual ~RealPath() {};
 
 	explicit operator const std::string&() const;
-	__mode_t permissions() const;
-	__off_t size() const;
+	mode_t permissions() const;
+	off_t size() const;
 
 protected:
 	std::string real_path_;
@@ -57,7 +57,7 @@ protected:
 
 class ScopedPath : public CanonicalPath {
 public:
-	ScopedPath(const std::string &path, const DirPath &prefix, const DirPath &scope);
+	ScopedPath(const std::string &path, const DirPath &prefix, const DirPath &scope, std::size_t max_len = 128);
 	virtual ~ScopedPath() {};
 
 	std::string stripped() const;
