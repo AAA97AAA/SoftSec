@@ -147,16 +147,10 @@ int ClientShell(const std::string &args, Process &proc, Channel *io)
 		string ifname, ofname;
 		ssargs >> ifname >> ofname;
 
-		ScopedPath *sp;
-
-		sp = proc.sys_.resolve(proc, ifname);
-		ScopedPath sifname(*sp);
-		delete sp;
+		ScopedPath sifname = proc.sys_.resolve(proc, ifname);
 		uin = &proc.resman_.create_readfile_channel(sifname)->in();
 
-		sp = proc.sys_.resolve(proc, ofname);
-		ScopedPath sofname(*sp);
-		delete sp;
+		ScopedPath sofname = proc.sys_.resolve(proc, ofname);
 		uout = &proc.resman_.create_writefile_channel(sofname)->out();
 	}
 
@@ -273,10 +267,7 @@ int ClientGet(const std::string &args, Process &proc, Channel *io)
 
 	istream &in = proc.resman_.create_outbound_channel((sockaddr *)&naddr)->in();
 
-	ScopedPath *sp = proc.sys_.resolve(proc, filename);
-	ScopedPath outfile(*sp);
-	delete sp;
-
+	ScopedPath outfile = proc.sys_.resolve(proc, filename);
 	ostream &out = proc.resman_.create_writefile_channel(outfile, ios::binary)->out();
 
 	size_t i = 0; 
@@ -308,12 +299,7 @@ int ClientPut(const std::string &args, Process &proc, Channel *io)
 
 	ostream &out = proc.resman_.create_outbound_channel((sockaddr *)&naddr)->out();
 
-	ScopedPath *sp = proc.sys_.resolve(proc, filename);
-	ScopedPath infile(*sp);
-	delete sp;
-
-	File<ScopedPath> file(infile); // sanitization step
-
+	File<ScopedPath> infile(proc.sys_.resolve(proc, filename)); // sanitization step
 	istream &in = proc.resman_.create_readfile_channel(infile, ios::binary)->in();
 
 	size_t i = 0; 

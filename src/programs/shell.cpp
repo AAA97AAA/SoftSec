@@ -116,15 +116,15 @@ static int PrivilegedShell(const string &args, Process &proc, Channel *io)
 		} else if (cmd == "logout") {
 			return 0;
 		} else if (cmd == "cd") {
-			ScopedPath *nwd = nullptr;
 			try {
-				nwd = proc.sys_.resolve(proc, cmd_args);
-				proc.env_.set_wd(*nwd);
+				if (cmd_args.size() == 0) {
+					out << proc.env_.get_wd().stripped() << endl;
+				} else {
+					ScopedPath nwd = proc.sys_.resolve(proc, cmd_args);
+					proc.env_.set_wd(nwd);
+				}
 			} catch (const std::exception &e) {
 				ShellExceptionHandler(proc, current_exception(), io);
-			}
-			if (nwd != nullptr) {
-				delete nwd;
 			}
 		} else {
 			auto it = programs.find(cmd);

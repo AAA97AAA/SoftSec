@@ -15,8 +15,8 @@ public:
 	// std::string strip_scope(const ScopedPath &path) const;
 
 	const Dir<ScopedPath> &root_dir() const;
-	ScopedPath * resolve(const Process &proc, const std::string &path);
-	ScopedPath * resolve(const Dir<ScopedPath> &prefix, const std::string &path);
+	ScopedPath resolve(const Process &proc, const std::string &path);
+	ScopedPath resolve(const Dir<ScopedPath> &prefix, const std::string &path);
 	void make_dir(const Process &proc, const std::string &path);
 	void remove_path(const Process &proc, const std::string &path);
 

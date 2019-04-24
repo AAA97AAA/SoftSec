@@ -13,7 +13,7 @@
 using namespace std;
 
 static
-void process(const ScopedPath *prefix, vector<ScopedPath *> &files, Process &proc, DIR *dirp, vector<ScopedPath *> &dirstash)
+void process(const ScopedPath prefix, vector<ScopedPath> &files, Process &proc, DIR *dirp, vector<ScopedPath> &dirstash)
 {
 	struct dirent *ent;
 	while ((ent = readdir(dirp)) != nullptr) {
@@ -21,27 +21,26 @@ void process(const ScopedPath *prefix, vector<ScopedPath *> &files, Process &pro
 			if(ent->d_name[0] == '.') {
 				continue;
 			}
-			dirstash.push_back(proc.sys_.resolve(*prefix, ent->d_name));
+			dirstash.push_back(proc.sys_.resolve(prefix, ent->d_name));
 		} else if (ent->d_type == DT_REG) {
-			files.push_back(proc.sys_.resolve(*prefix, ent->d_name));
+			files.push_back(proc.sys_.resolve(prefix, ent->d_name));
 		}
 	}
 }
 
 static
-void walk(const string &prefix, vector<ScopedPath *> &files, Process &proc)
+void walk(const string &prefix, vector<ScopedPath> &files, Process &proc)
 {
-	vector<ScopedPath *> dirstash;
+	vector<ScopedPath> dirstash;
 	dirstash.push_back(proc.sys_.resolve(proc, prefix));
 	DIR *dirp;
 
 	while (dirstash.size() != 0) {
-		ScopedPath *current = dirstash.back();
+		ScopedPath current = dirstash.back();
 		dirstash.pop_back();
-		dirp = opendir(static_cast<const string &>(*current).c_str());
+		dirp = opendir(static_cast<const string &>(current).c_str());
 		process(current, files, proc, dirp, dirstash);
 		closedir(dirp);
-		delete current;
 	}
 }
 
@@ -63,13 +62,11 @@ int Grep(const string &args, Process &proc, Channel *io)
 	}
 	SearchExpression se(regexp);
 
-	vector<ScopedPath *> files;
+	vector<ScopedPath> files;
 	walk(".", files, proc);
 
 	for (auto it = files.cbegin(); it != files.cend(); ++it) {
-		ScopedPath *spath = *it;
-		ScopedPath current(*spath);
-		delete spath;
+		ScopedPath  current = *it;
 
 		Channel *fileio = proc.resman_.create_readfile_channel(current);
 		istream &file = fileio->in();

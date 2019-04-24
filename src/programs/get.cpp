@@ -25,10 +25,8 @@ static int GetFileDaemon(const string &args, Process &proc, Channel *io)
 	dargs >> port;
 	string filename = get_args(dargs);
 
-	ScopedPath *scoped = proc.sys_.resolve(proc, filename);
-	filename = static_cast<const string &>(*scoped);
-	ScopedPath local(*scoped); // so as not to worry about leaks
-	delete scoped;
+	ScopedPath scoped = proc.sys_.resolve(proc, filename);
+	filename = static_cast<const string &>(scoped);
 
 	struct sockaddr_in addr;
 
@@ -39,7 +37,7 @@ static int GetFileDaemon(const string &args, Process &proc, Channel *io)
 
 	ListeningSocket sock((sockaddr *)&addr, 10000);
 	ostream &out = proc.resman_.create_inbound_channel(&sock, 5000)->out();
-	istream &in = proc.resman_.create_readfile_channel(local, fstream::binary)->in();
+	istream &in = proc.resman_.create_readfile_channel(scoped, fstream::binary)->in();
 
 	copy(istreambuf_iterator<char>(in), 
 		istreambuf_iterator<char>(),
@@ -56,16 +54,9 @@ int GetFile(const string &args, Process &proc, Channel *io)
 	unsigned short port = (rand() % (0xffff - 0xc000)) + 0xc000;
 
 	string filename = args;
-	ScopedPath *scoped = proc.sys_.resolve(proc, filename);
 	size_t size;
-	try {
-		File<ScopedPath> file(*scoped);
-		delete scoped;
-		size = file.size();
-	} catch (...) {
-		delete scoped;
-		throw;
-	}
+	File<ScopedPath> file(proc.sys_.resolve(proc, filename));
+	size = file.size();
 
 	ostringstream dargs;
 	dargs << port << " " << args;

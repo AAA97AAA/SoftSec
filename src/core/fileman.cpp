@@ -22,7 +22,7 @@ const Dir<ScopedPath> & FileManager::root_dir() const
 	return root_dir_;
 }
 
-ScopedPath * FileManager::resolve(const Process &proc, const std::string &path)
+ScopedPath FileManager::resolve(const Process &proc, const std::string &path)
 {
 	if (path.size() == 0) {
 		return resolve(proc.env_.get_wd(), ".");
@@ -33,17 +33,16 @@ ScopedPath * FileManager::resolve(const Process &proc, const std::string &path)
 	}
 }
 
-ScopedPath * FileManager::resolve(const Dir<ScopedPath> &prefix, const std::string &path)
+ScopedPath FileManager::resolve(const Dir<ScopedPath> &prefix, const std::string &path)
 {
-	return new ScopedPath(path, prefix, root_dir_);
+	return ScopedPath(path, prefix, root_dir_);
 }
 
 void FileManager::make_dir(const Process &proc, const std::string &path)
 {
-	ScopedPath *resolved = resolve(proc, path);
-	const string &rstr = static_cast<const string &>(*resolved);
+	ScopedPath resolved = resolve(proc, path);
+	const string &rstr = static_cast<const string &>(resolved);
 	int result = mkdir(rstr.c_str(), root_perms_);
-	delete resolved;
 
 	if (result < 0) {
         throw std::runtime_error(strerror(errno));
@@ -52,15 +51,14 @@ void FileManager::make_dir(const Process &proc, const std::string &path)
 
 void FileManager::remove_path(const Process &proc, const std::string &path)
 {
-	ScopedPath *resolved = resolve(proc, path);
-	const string &rstr = static_cast<const string &>(*resolved);
+	ScopedPath resolved = resolve(proc, path);
+	const string &rstr = static_cast<const string &>(resolved);
 	int result;
 	if (rstr == static_cast<const string &>(root_dir_)) {
 		result = -2;
 	} else {
 		result = remove(rstr.c_str());
 	}
-	delete resolved;
 
 	if (result == -1) {
         throw std::runtime_error(strerror(errno));

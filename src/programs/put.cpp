@@ -26,10 +26,8 @@ static int PutFileDaemon(const string &args, Process &proc, Channel *io)
 	dargs >> port >> filesize;
 	string filename = get_args(dargs);
 
-	ScopedPath *scoped = proc.sys_.resolve(proc, filename);
-	filename = static_cast<const string &>(*scoped);
-	ScopedPath local(*scoped); // so as not to worry about leaks
-	delete scoped;
+	ScopedPath scoped = proc.sys_.resolve(proc, filename);
+	filename = static_cast<const string &>(scoped);
 
 	struct sockaddr_in addr;
 
@@ -40,7 +38,7 @@ static int PutFileDaemon(const string &args, Process &proc, Channel *io)
 
 	ListeningSocket sock((sockaddr *)&addr, 10000);
 	istream &in = proc.resman_.create_inbound_channel(&sock, 5000)->in();
-	ostream &out = proc.resman_.create_writefile_channel(local, fstream::binary)->out();
+	ostream &out = proc.resman_.create_writefile_channel(scoped, fstream::binary)->out();
 
 	size_t i = 0; 
 	auto oit = ostreambuf_iterator<char>(out);
@@ -73,8 +71,7 @@ int PutFile(const string &args, Process &proc, Channel *io)
 		throw std::runtime_error("Invalid file size");
 	}
 
-	ScopedPath *scoped = proc.sys_.resolve(proc, filename); // sanitization step
-	delete scoped;
+	ScopedPath scoped = proc.sys_.resolve(proc, filename); // sanitization step
 
 	ostringstream ssdargs;
 	ssdargs << port << " " << filesize << " " << filename << flush;
