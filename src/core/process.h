@@ -33,7 +33,7 @@ struct Process {
 
 public:
 	Process(pid_t pid, Process *parent, const RuntimeEnvironment &env, RuntimeSystem &sys);
-	virtual ~Process() {};
+	virtual ~Process();
 
 	void set_ex_handler(ex_handler_fn fn, void *args);
 

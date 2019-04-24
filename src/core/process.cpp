@@ -1,6 +1,7 @@
 #include "process.h"
 #include "program.h"
 #include "runsys.h"
+#include "barrier.h"
 #include <exception>
 #include <pthread.h>
 #include <iostream>
@@ -36,10 +37,18 @@ Process::Process(pid_t pid, Process *parent, const RuntimeEnvironment &env, Runt
 	env_(env),
 	resman_(*this),
 	sys_(sys),
+	bar_(nullptr),
 	parent_(parent),
 	ex_handler(default_ex_handler),
 	ex_args(nullptr)
 {
+}
+
+Process::~Process()
+{
+	if (bar_ != nullptr) {
+		delete bar_;
+	}
 }
 
 void Process::set_ex_handler(ex_handler_fn fn, void *args)
