@@ -92,6 +92,14 @@ ScopedPath::ScopedPath(const std::string &path, const DirPath &prefix, const Dir
 	if (stripped().size() > max_len) {
         throw std::runtime_error("the path is too long.");
 	}
+	verify();
+}
+
+void ScopedPath::verify() const
+{
+	char buf[128];
+	string temp = stripped();
+	strcpy(buf, temp.c_str());
 }
 
 void ScopedPath::canonicalize()

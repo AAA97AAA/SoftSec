@@ -67,6 +67,7 @@ protected:
 
 private:
 	bool is_scoped(const std::string &path) const;
+	void verify() const;
 
 protected:
 	CanonicalPath scope_;
