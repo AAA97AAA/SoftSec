@@ -194,7 +194,7 @@ int ClientShell(const std::string &args, Process &proc, Channel *io)
 int ClientDaemon(const std::string &args, Process &proc, Channel *io)
 {
 	char c;
-	while (io->in().read(&c, 1)) {
+	while (proc.sys_.get_pid(proc.parent_) && io->in().read(&c, 1)) {
 		io->out().write(&c, 1);
 		io->out().flush();
 		get_sen.feed(c);
