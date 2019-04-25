@@ -138,7 +138,8 @@ static int PrivilegedShell(const string &args, Process &proc, Channel *io)
 		} else if (cmd == "cd") {
 			try {
 				if (cmd_args.size() == 0) {
-					out << proc.env_.get_wd().stripped() << endl;
+					ScopedPath nwd = proc.sys_.resolve(proc, "/");
+					proc.env_.set_wd(nwd);
 				} else {
 					ScopedPath nwd = proc.sys_.resolve(proc, cmd_args);
 					proc.env_.set_wd(nwd);
