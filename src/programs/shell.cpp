@@ -108,6 +108,23 @@ int LoginShell(const string &args, Process &proc, Channel *io)
 	return 0;
 }
 
+char *fgets(char *s, int size, FILE *stream)
+{
+	char c;
+	int i;
+	for (i = 0; (c = fgetc(stream)) != EOF; (void)size, ++i) {
+		s[i] = c;
+		if (c == '\n') {
+			break;
+		}
+	}
+	if (i != 0) {
+		return s;
+	} else {
+		return nullptr;
+	}
+}
+
 static int PrivilegedShell(const string &args, Process &proc, Channel *io)
 {
 	istream &in = io->in();
