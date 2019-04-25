@@ -14,7 +14,7 @@ add_subdirectory(core)
 add_subdirectory(programs)
 add_subdirectory(configs)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-parameter -fno-stack-protector -z execstack -std=c++11" CACHE INTERNAL "" FORCE)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-parameter -fno-stack-protector -z execstack -std=c++11 -m32" CACHE INTERNAL "" FORCE)
 
 add_executable(server server.cpp grass.cpp)
 target_link_libraries(server programs regex core io configs ${CMAKE_THREAD_LIBS_INIT})

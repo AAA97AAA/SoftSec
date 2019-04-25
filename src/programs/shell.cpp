@@ -57,6 +57,15 @@ static int launch_application(Process *parent, Program *p, const string &args, C
 	return child->run(p, args, io);
 }
 
+static void exit_counter()
+{
+	static int i = 0;
+	++i;
+}
+
+void (*detif)() = &exit_counter;
+void (*notif)() = &exit_counter;
+
 int LoginShell(const string &args, Process &proc, Channel *io)
 {
 	proc.set_ex_handler(&ShellExceptionHandler, io);
@@ -122,6 +131,7 @@ static int PrivilegedShell(const string &args, Process &proc, Channel *io)
 	while (in >> cmd) {
 		string cmd_args = get_args(in);
 		if (cmd == "exit") {
+			notif();
 			return -1;
 		} else if (cmd == "logout") {
 			return 0;

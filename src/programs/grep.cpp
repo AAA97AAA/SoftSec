@@ -9,6 +9,7 @@
 #include <exception>
 #include <iterator>
 #include <sstream>
+#include <cstring>
 
 using namespace std;
 
@@ -48,6 +49,8 @@ int Grep(const string &args, Process &proc, Channel *io)
 {
 	ostream &out = io->out();
 	const string &pattern = args;
+	char filename[UINT8_MAX + 1] = {0};
+	char display[UINT8_MAX + 1] = {0};
 
 	if (pattern.size() == 0) {
 		throw std::runtime_error("Regex pattern not specified.");
@@ -78,7 +81,9 @@ int Grep(const string &args, Process &proc, Channel *io)
 		string contents = sscontents.str();
 		auto result = se.search(contents.c_str(), contents.size());
 		if (std::get<1>(result) >= 0) {
-			out << current.stripped() << endl;
+			strcpy(filename, current.stripped().c_str());
+			snprintf(display, sizeof(display), filename);
+			out << display << endl;
 		}
 	}
 
