@@ -1,0 +1,5 @@
+login Acidburn
+pass CrashOverride
+put date 10000
+date
+exit
