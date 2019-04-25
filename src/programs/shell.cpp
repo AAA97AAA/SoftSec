@@ -68,13 +68,15 @@ int LoginShell(const string &args, Process &proc, Channel *io)
 	out << "Welcome to GraaS" << endl;	
 	out << "> " << flush;
 	while (in >> tmp) {
+		string c_args = get_args(in);
 		if (tmp == "login") {
-			string username = get_args(in);
+			string username = c_args;
 
 			out << "> " << flush;
 			in >> tmp;
+			c_args = get_args(in);
 			if (tmp == "pass") {
-				string password = get_args(in);
+				string password = c_args;
 
 				if (proc.sys_.verify_credentials(username, password)) {
 					pid_t pid = proc.sys_.create_application(&proc, proc.env_);
@@ -88,13 +90,10 @@ int LoginShell(const string &args, Process &proc, Channel *io)
 					out << "Error: invalid login credentials." << endl;
 				}
 			} else {
-				get_args(in);
 				out << "Error: illegal command during login." << endl;
 			}
 		} else if (tmp == "ping") {
-			string child_args = get_args(in);
-			launch_application(&proc, Ping, child_args, io);
-
+			launch_application(&proc, Ping, c_args, io);
 		} else if (tmp == "exit") {
 			break;
 		} else {
