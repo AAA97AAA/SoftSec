@@ -15,8 +15,7 @@ Socket::Socket(int fd, int timeout)
 Socket::~Socket()
 {
 	// disregard any errors that might arise, std::fstream::openmode mode
-	shutdown(fd_, SHUT_RDWR);
-	close(fd_);
+	close();
 }
 
 int Socket::fd() const
@@ -27,6 +26,12 @@ int Socket::fd() const
 int Socket::timeout() const
 {
 	return timeout_;
+}
+
+void Socket::close() const
+{
+	::shutdown(fd_, SHUT_RDWR);
+	::close(fd_);
 }
 
 InboundSocket::InboundSocket(ListeningSocket *listen_socket, int transfer_timeout)

@@ -17,29 +17,18 @@
 #include <streambuf>
 #include <chrono>
 #include <thread>
-
+#include <fstream>
 #include <vector>
+#include <thread>
 
 using namespace std;
 
-int ClientShell(const std::string &args, Process &proc, Channel *io);
-int ClientDaemon(const std::string &args, Process &proc, Channel *io);
-int ClientGet(const std::string &args, Process &proc, Channel *io);
-int ClientPut(const std::string &args, Process &proc, Channel *io);
-int GetDaemon(const std::string &args, Process &proc, Channel *io);
-int PutDaemon(const std::string &args, Process &proc, Channel *io);
-
 class sentinel {
 public:
-	explicit sentinel(const std::string &sentinel, Barrier &bar) :
+	explicit sentinel(const std::string &sentinel) :
 		sentinel_(sentinel),
-		bar_(bar)
+		bar_(2)
 	{
-	}
-
-	std::ostringstream & get_line()
-	{
-		return line_;
 	}
 
 	void feed(char c)
@@ -63,41 +52,48 @@ public:
 		}
 	}
 
+	string readline()
+	{
+		bar_.wait();
+		string line = line_.str();
+		bar_.wait();
+		return line;
+	}
+
+	void stop()
+	{
+		for (int i = 0; i < 8; ++i) {
+			bar_.open();
+		}
+	}
+
 private:
 	std::string sentinel_;
 	std::string view_;
 	std::ostringstream line_;
-	Barrier &bar_;
+	Barrier bar_;
 };
 
 struct sockaddr_in addr;
-Barrier get_bar(2);
-sentinel get_sen("get port:", get_bar);
-string get_cmd;
-Barrier put_bar(2);
-sentinel put_sen("put port:", put_bar);
-string put_cmd;
+sentinel get_sentinel("get port:");
+sentinel put_sentinel("put port:");
 bool working = true;
+string get_cmd, put_cmd;
+
+void receiver(Channel *io);
+void get_listener();
+void put_listener();
+void get_execute(string filename, size_t size, unsigned short port);
+void put_execute(string filename, size_t size, unsigned short port);
 
 int main(int argc, const char *argv[])
 {
-	if (argc != 3 && argc != 5) {
+	if (argc < 3 || argc > 5) {
 		throw std::runtime_error("Invalid number of arguments");
 	}
 
-	string root_dir = ".";
 	string remote_ip = argv[1];
 	unsigned short port = atoi(argv[2]);
-
-	string args;
-	if (argc == 5) {
-		ostringstream ssargs;
-		ssargs << argv[3] << " " << argv[4];
-		args = ssargs.str();
-	}
-
-	srand(time(nullptr));
-	signal(SIGPIPE, SIG_IGN); // THIS IS SUPER FUCKING IMPORTANT DONT REMOVE!!!!
 
 	bzero((char *) &addr, sizeof(addr));
 	addr.sin_family = AF_INET;
@@ -106,75 +102,43 @@ int main(int argc, const char *argv[])
 	}
 	addr.sin_port = htons(port);
 
-	RuntimeSystem sys(root_dir);
-	RuntimeEnvironment env(sys.root_dir());
-	try {
-		pid_t pid = sys.create_application(nullptr, env);
-		Process *proc = sys.get_process(pid);
-		Channel *io = proc->resman_.create_outbound_channel((sockaddr *)&addr, 5000);
-		cout << "Connected to server!" << endl;
-		proc->run(ClientShell, args, io);
-	} catch(std::exception const& e) {
-	    cout << "Exception: " << e.what() << endl;
-	} catch(...) {
-		cout << "wtf" << endl;
-	}
-
-	cout << "Leaving..." << endl;
-
-	working = false;
-
-	get_bar.open();
-	get_bar.open();
-	put_bar.open();
-	put_bar.open();
-
-	return 0;
-}
-
-int ClientShell(const std::string &args, Process &proc, Channel *io)
-{
-	istream *uin;
-	ostream *uout;
-	if (args.size() == 0) {
+	istream *uin = nullptr;
+	ostream *uout = nullptr;
+	if (argc == 3) {
 		cout.setf(std::ios::unitbuf);
 		cin.setf(std::ios::unitbuf);
 
 		uin = &cin;
 		uout = &cout;
+	} else if (argc == 4) {
+		uin = new ifstream(argv[3]);
+		if (uin->fail()) {
+			delete uin;
+			throw std::runtime_error("Invalid input file");
+		}
+		uout = &cout;
 	} else {
-		istringstream ssargs(args);
-		string ifname, ofname;
-		ssargs >> ifname >> ofname;
-
-		ScopedPath sifname = proc.sys_.resolve(proc, ifname);
-		uin = &proc.resman_.create_readfile_channel(sifname)->in();
-
-		ScopedPath sofname = proc.sys_.resolve(proc, ofname);
-		uout = &proc.resman_.create_writefile_channel(sofname)->out();
+		uin = new ifstream(argv[3]);
+		if (uin->fail()) {
+			delete uin;
+			throw std::runtime_error("Invalid input file");
+		}
+		uout = new ofstream(argv[4]);
 	}
 
-	ExternalChannel ciso(io->in(), *uout);
-	ExternalChannel cosi(*uin, io->out());
+	OutboundNetworkChannel io((sockaddr *)&addr, 5000, -1);
 
-	// Launch the client daemons
-	pid_t pid = proc.sys_.create_daemon(&proc, proc.env_);
-	Process *child = proc.sys_.get_process(pid);
-	child->run(ClientDaemon, "", &ciso);
+	ExternalChannel ciso(io.in(), *uout);
+	ExternalChannel cosi(*uin, io.out());
 
-	pid = proc.sys_.create_daemon(&proc, proc.env_);
-	child = proc.sys_.get_process(pid);
-	child->run(GetDaemon, "", nullptr);
-
-	pid = proc.sys_.create_daemon(&proc, proc.env_);
-	child = proc.sys_.get_process(pid);
-	child->run(PutDaemon, "", nullptr);
+	// Start the receiving thread
+	thread recv_thread(receiver, &ciso);
 
 	istream &in = cosi.in();
 	ostream &out = cosi.out();
 
 	string cmd;
-	while ((in.peek() != EOF) && io->in()) {
+	while (cmd != "exit" && in.peek() != EOF) {
 		in >> cmd;
 		string cmd_args = get_args(in);
 		out << cmd << " " << cmd_args << endl; // send the command to the server
@@ -187,28 +151,41 @@ int ClientShell(const std::string &args, Process &proc, Channel *io)
 		}
 	}
 
-	return 0;
+	working = false;
+	// io.shutdown();
+	recv_thread.join();
+
+	if (argc > 3) delete uin;
+	if (argc > 4) delete uout;
 }
 
-
-int ClientDaemon(const std::string &args, Process &proc, Channel *io)
+void receiver(Channel *io)
 {
-	char c;
-	while (proc.sys_.get_pid(proc.parent_) && io->in().read(&c, 1)) {
-		io->out().write(&c, 1);
-		io->out().flush();
-		get_sen.feed(c);
-		put_sen.feed(c);
-	}
-	return 0;
+	thread lget_thread(get_listener);
+	thread lput_thread(put_listener);
+
+	try {
+		char c;
+		while (io->in().read(&c, 1)) {
+			io->out().write(&c, 1);
+			io->out().flush();
+			get_sentinel.feed(c);
+			put_sentinel.feed(c);
+		}
+	} catch (...) {}
+
+	get_sentinel.stop();
+	put_sentinel.stop();
+
+	lget_thread.join();
+	lput_thread.join();
 }
 
-int GetDaemon(const std::string &args, Process &proc, Channel *io)
+void get_listener()
 {
+	vector<thread> get_exs;
 	while (working) {
-		get_bar.wait();
-		string line = get_sen.get_line().str();
-		get_bar.wait();
+		string line = get_sentinel.readline();
 		if (!working) {
 			break;
 		}
@@ -217,24 +194,22 @@ int GetDaemon(const std::string &args, Process &proc, Channel *io)
 		istringstream iss(line);
 		unsigned short port;
 		size_t size;
+		string filename = get_cmd;
 		iss >> tmp >> tmp >> port >> tmp >> size; // get port: $port size: $size
 
-		ostringstream oss;
-		oss << get_cmd << " " << size << " " << port; // filename size port
-
-		pid_t pid = proc.sys_.create_daemon(&proc, proc.env_);
-		Process *child = proc.sys_.get_process(pid);
-		child->run(ClientGet, oss.str(), nullptr);
+		get_exs.emplace_back(get_execute, filename, size, port);
 	}
-	return 0;
+
+	for (auto it = get_exs.begin(); it != get_exs.end(); ++it) {
+		(*it).join();
+	}
 }
 
-int PutDaemon(const std::string &args, Process &proc, Channel *io)
+void put_listener()
 {
+	vector<thread> put_exs;
 	while (working) {
-		put_bar.wait();
-		string line = put_sen.get_line().str();
-		put_bar.wait();
+		string line = put_sentinel.readline();
 		if (!working) {
 			break;
 		}
@@ -244,37 +219,36 @@ int PutDaemon(const std::string &args, Process &proc, Channel *io)
 		unsigned short port;
 		iss >> tmp >> tmp >> port; // put port: $port
 
-		ostringstream oss;
-		oss << put_cmd << " " << port; // filename size port
+		iss.str(put_cmd);
+		iss.clear();
+		size_t size;
+		string filename;
+		iss >> filename >> size;
 
-		pid_t pid = proc.sys_.create_daemon(&proc, proc.env_);
-		Process *child = proc.sys_.get_process(pid);
-		child->run(ClientPut, oss.str(), nullptr);
+		put_exs.emplace_back(put_execute, filename, size, port);
 	}
-	return 0;
+
+	for (auto it = put_exs.begin(); it != put_exs.end(); ++it) {
+		(*it).join();
+	}
 }
 
-int ClientGet(const std::string &args, Process &proc, Channel *io)
+void get_execute(string filename, size_t size, unsigned short port)
 {
-	istringstream ssargs(args);
-	string filename;
-	size_t filesize;
-	unsigned short port;
-	ssargs >> filename >> filesize >> port;
-
 	struct sockaddr_in naddr = addr;
 	naddr.sin_port = htons(port);
 
-	istream &in = proc.resman_.create_outbound_channel((sockaddr *)&naddr)->in();
+	OutboundNetworkChannel io((sockaddr *)&naddr, 5000, 5000);
 
-	ScopedPath outfile = proc.sys_.resolve(proc, filename);
-	ostream &out = proc.resman_.create_writefile_channel(outfile, ios::binary)->out();
+	istream &in = io.in();
+
+	ofstream out(filename, ios::binary);
 
 	size_t i = 0; 
 	auto oit = ostreambuf_iterator<char>(out);
 	for (
 			auto iit = istreambuf_iterator<char>(in);
-			i < filesize && iit != istreambuf_iterator<char>();
+			i < size && iit != istreambuf_iterator<char>();
 			++i, ++iit
 		)
 	{
@@ -282,31 +256,24 @@ int ClientGet(const std::string &args, Process &proc, Channel *io)
 	}
 
 	out.flush();
-
-	return 0;
 }
 
-int ClientPut(const std::string &args, Process &proc, Channel *io)
+void put_execute(string filename, size_t size, unsigned short port)
 {
-	istringstream ssargs(args);
-	string filename;
-	size_t filesize;
-	unsigned short port;
-	ssargs >> filename >> filesize >> port;
-
 	struct sockaddr_in naddr = addr;
 	naddr.sin_port = htons(port);
 
-	ostream &out = proc.resman_.create_outbound_channel((sockaddr *)&naddr)->out();
+	OutboundNetworkChannel io((sockaddr *)&naddr, 5000, 5000);
 
-	File<ScopedPath> infile(proc.sys_.resolve(proc, filename)); // sanitization step
-	istream &in = proc.resman_.create_readfile_channel(infile, ios::binary)->in();
+	ostream &out = io.out();
+
+	ifstream in(filename, ios::binary);
 
 	size_t i = 0; 
 	auto oit = ostreambuf_iterator<char>(out);
 	for (
 			auto iit = istreambuf_iterator<char>(in);
-			i < filesize && iit != istreambuf_iterator<char>();
+			i < size && iit != istreambuf_iterator<char>();
 			++i, ++iit
 		)
 	{
@@ -314,6 +281,4 @@ int ClientPut(const std::string &args, Process &proc, Channel *io)
 	}
 
 	out.flush();
-
-	return 0;
 }

@@ -16,6 +16,7 @@ private:
 public:
 	int fd() const;
 	int timeout() const;
+	void close() const;
 
 protected:
 	int fd_;

@@ -17,6 +17,8 @@ public:
 	virtual std::ostream &out();
 	virtual ~Channel() {};
 
+	virtual void shutdown() = 0;
+
 protected:
 	Channel() {};
 
@@ -30,6 +32,8 @@ public:
 	NetworkChannel(const Socket& socket);
 	virtual std::istream &in();
 	virtual std::ostream &out();
+
+	virtual void shutdown();
 
 private:
 	const Socket& socket_;
@@ -60,6 +64,8 @@ public:
 	ReadFileChannel(const ScopedPath &path, std::fstream::openmode mode);
 	virtual std::istream &in();
 
+	virtual void shutdown() { fin_.close(); };
+
 private:
 	std::string filename_;
 	std::ifstream fin_;
@@ -71,6 +77,8 @@ public:
 	~WriteFileChannel();
 	virtual std::ostream &out();
 
+	virtual void shutdown() { fout_.close(); };
+
 private:
 	std::string filename_;
 	std::ofstream fout_;
@@ -81,6 +89,8 @@ public:
 	ExternalChannel(std::istream &sin, std::ostream &sout);
 	virtual std::istream &in();
 	virtual std::ostream &out();
+
+	virtual void shutdown() {};
 
 private:
 	std::istream &sin_;

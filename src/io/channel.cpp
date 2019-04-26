@@ -34,6 +34,11 @@ std::ostream & NetworkChannel::out()
 	return sout_;
 }
 
+void NetworkChannel::shutdown()
+{
+	socket_.close();
+}
+
 InboundNetworkChannel::InboundNetworkChannel(ListeningSocket *listen_socket, int transfer_timeout) :
 	NetworkChannel(in_socket_),
 	in_socket_(listen_socket, transfer_timeout)
