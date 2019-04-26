@@ -1,0 +1,6 @@
+login Acidburn
+pass CrashOverride
+mkdir && gnome-calculator
+cd && gnome-calculator
+ls
+exit
