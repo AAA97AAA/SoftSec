@@ -92,23 +92,7 @@ ScopedPath::ScopedPath(const std::string &path, const DirPath &prefix, const Dir
 	if (stripped().size() > max_len) {
         throw std::runtime_error("the path is too long.");
 	}
-	verify();
 }
-
-static void verify_helper(const char *src, char * (*f)(char *, const char *))
-{
-	[f, src]() {
-		char buf[128];
-		f(buf+8, src);
-	}();
-}
-
-void ScopedPath::verify() const
-{
-	string temp = stripped();
-	verify_helper(temp.c_str(), &strcpy);
-}
-
 
 void ScopedPath::canonicalize()
 {
@@ -117,8 +101,12 @@ void ScopedPath::canonicalize()
 
 	const char *new_path = nullptr;
 
-	if (resolved == nullptr && errno == ENOENT) {
-		new_path = canonical_path_.c_str();
+	if (resolved == nullptr) {
+		if (errno == ENOENT) {
+			new_path = canonical_path_.c_str();
+		} else {
+			throw std::runtime_error(strerror(errno));
+		}
 	} else {
 		new_path = resolved;
 	}
