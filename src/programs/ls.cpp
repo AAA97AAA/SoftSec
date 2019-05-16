@@ -35,17 +35,35 @@ int Ls(const string & args, Process & proc, Channel * io) {
 	ostream & out = io->out();
 
 	string path = static_cast<const string &>(proc.env_.get_wd()).c_str();
-	string cmdstr = "/bin/ls -l " + path;
 
-	const char * cmd = cmdstr.c_str();
-	auto pipe = popen(cmd, "r");
-
-	char c;
-	while ((c = fgetc(pipe)) != EOF) {
-		out << c;
+	int rpipe[2];
+	if(pipe(rpipe) != 0) {
+		throw std::runtime_error(strerror(errno));
 	}
 
-	pclose(pipe);
+	pid_t pid = fork();
+	if (pid == 0) {
+		close(rpipe[0]);
+		dup2(rpipe[1], STDOUT_FILENO);
+		execlp("/bin/ls", "/bin/ls", "-l", path.c_str(), (char*)nullptr);
+		close(rpipe[1]);
+		exit(0);
+	} else if (pid > 0) {
+		char ch;
+		string cmd_out = "";
+		close(rpipe[1]);
+
+		while (read(rpipe[0],&ch,1) > 0) {
+			if (ch != '\0') {
+				string tmp_s(1, ch);
+				cmd_out.append(tmp_s);
+			}
+		}
+
+		out << cmd_out;
+		cmd_out.clear();
+		close(rpipe[0]);
+	}
 
 	return 0;
 }
