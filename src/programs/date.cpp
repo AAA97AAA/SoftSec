@@ -23,7 +23,7 @@ int Date(const string &args, Process &proc, Channel *io) {
 	if (date_pid == 0) {
 		close(rpipe[0]);
 		dup2(rpipe[1], STDOUT_FILENO);
-		execlp("date", "date", (char*) NULL);
+		execl("/bin/date", "/bin/date", (char*) NULL);
 		close(rpipe[1]);
 		exit(0);
 	} else if (date_pid > 0) {
